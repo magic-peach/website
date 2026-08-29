@@ -114,11 +114,32 @@ For an example, consider a five-member etcd cluster running with the following
 client URLs: `http://$IP1:2379`, `http://$IP2:2379`, `http://$IP3:2379`,
 `http://$IP4:2379`, and `http://$IP5:2379`. To start a Kubernetes API server:
 
-1. Run the following:
+1. On each of the five hosts, run a separate etcd instance that listens for
+   client traffic on, and advertises, only that host's own client URL:
 
    ```shell
-   etcd --listen-client-urls=http://$IP1:2379,http://$IP2:2379,http://$IP3:2379,http://$IP4:2379,http://$IP5:2379 --advertise-client-urls=http://$IP1:2379,http://$IP2:2379,http://$IP3:2379,http://$IP4:2379,http://$IP5:2379
+   # on the host with IP address $IP1
+   etcd --listen-client-urls=http://$IP1:2379 --advertise-client-urls=http://$IP1:2379 ...
+
+   # on the host with IP address $IP2
+   etcd --listen-client-urls=http://$IP2:2379 --advertise-client-urls=http://$IP2:2379 ...
+
+   # on the host with IP address $IP3
+   etcd --listen-client-urls=http://$IP3:2379 --advertise-client-urls=http://$IP3:2379 ...
+
+   # on the host with IP address $IP4
+   etcd --listen-client-urls=http://$IP4:2379 --advertise-client-urls=http://$IP4:2379 ...
+
+   # on the host with IP address $IP5
+   etcd --listen-client-urls=http://$IP5:2379 --advertise-client-urls=http://$IP5:2379 ...
    ```
+
+   Each command above is a separate etcd process, not a single combined
+   command line; `--listen-client-urls` and `--advertise-client-urls` should
+   only include the client URL for the host the command is running on. See
+   the [etcd clustering documentation](https://etcd.io/docs/current/op-guide/clustering/)
+   for the full set of flags each member needs (such as
+   `--initial-advertise-peer-urls` and `--initial-cluster`) to form a cluster.
 
 2. Start the Kubernetes API servers with the flag
    `--etcd-servers=$IP1:2379,$IP2:2379,$IP3:2379,$IP4:2379,$IP5:2379`.
